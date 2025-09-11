@@ -2,6 +2,7 @@
 name = "shortcut-matcher"
 version = "0.1.0"
 edition = "2021"
+license.workspace = true
 
 [dependencies]
 config = { path = "../config" }
