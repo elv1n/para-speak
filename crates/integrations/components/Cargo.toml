@@ -1,0 +1,13 @@
+[package]
+name = "components"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0"
+audio = { path = "../../core/audio" }
+clipboard = { path = "../../core/clipboard" }
+config = { path = "../../core/config" }
+focus-detector = { path = "../focus-detector" }
+log = { path = "../../core/log" }
+thiserror = "2.0"

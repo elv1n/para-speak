@@ -1,0 +1,64 @@
+[package]
+name = "para-speak-cli"
+version = "1.0.0"
+edition = "2021"
+
+[[bin]]
+name = "para-speak"
+path = "src/main.rs"
+
+[dependencies]
+# Workspace crates
+audio = { path = "../../core/audio" }
+config = { path = "../../core/config" }
+shortcut-listener = { path = "../shortcut-listener" }
+clipboard = { path = "../../core/clipboard" }
+ml-core = { path = "../../core/ml-core" }
+focus-detector = { path = "../focus-detector" }
+components = { path = "../components" }
+dashmap = "6.1"
+shortcut-matcher = { path = "../../core/shortcut-matcher" }
+
+# CLI and configuration dependencies are now in core/config
+
+
+# Logging
+log = { path = "../../core/log" }
+
+# Error handling  
+anyhow = "1.0"
+thiserror = "2.0"
+
+# System interaction
+sysinfo = "0.32"
+signal-hook = "0.3"
+memory-stats = "1.2"
+chrono = "0.4.41"
+backtrace = "0.3"
+libc = "0.2"
+
+# macOS specific
+[target.'cfg(target_os = "macos")'.dependencies]
+core-foundation = "0.10"
+objc2 = { workspace = true }
+objc2-foundation = { workspace = true }
+objc2-app-kit = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Audio
+hound = { workspace = true }
+
+# Python integration
+pyo3 = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3"
+cocoa = "0.25"
+objc = "0.2"
+assert_cmd = "2.0"
+predicates = "3.0"
+serial_test = "3.0"
+rdev = { workspace = true }

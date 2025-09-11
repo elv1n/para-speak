@@ -1,0 +1,9 @@
+[package]
+name = "clipboard"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+arboard = { workspace = true }
+log = { path = "../log" }
+rdev = { workspace = true }

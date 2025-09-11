@@ -1,0 +1,54 @@
+use std::path::{Path, PathBuf};
+use std::fs;
+
+pub const MODEL_NAME: &str = "mlx-community/parakeet-tdt-0.6b-v3";
+pub const REQUIRED_FILES: &[&str] = &[
+    "config.json",
+    "model.safetensors", 
+    "tokenizer.model",
+    "tokenizer.vocab"
+];
+
+pub fn get_models_dir() -> PathBuf {
+    std::env::current_dir()
+        .unwrap_or_else(|_| PathBuf::from("."))
+        .join("models")
+}
+
+pub fn get_model_cache_path() -> PathBuf {
+    let models_dir = get_models_dir();
+    let model_id = MODEL_NAME.replace("/", "--");
+    models_dir.join("hub").join(format!("models--{}", model_id))
+}
+
+pub fn model_exists() -> bool {
+    model_exists_at_path(&get_model_cache_path())
+}
+
+pub fn model_exists_at_path(cache_path: &Path) -> bool {
+    if !cache_path.exists() {
+        return false;
+    }
+
+    let snapshot_dir = cache_path.join("snapshots");
+    if !snapshot_dir.exists() {
+        return false;
+    }
+
+    if let Ok(entries) = fs::read_dir(&snapshot_dir) {
+        for entry in entries.flatten() {
+            let snapshot_path = entry.path();
+            if snapshot_path.is_dir() {
+                let all_files_exist = REQUIRED_FILES.iter().all(|file| {
+                    snapshot_path.join(file).exists()
+                });
+                
+                if all_files_exist {
+                    return true;
+                }
+            }
+        }
+    }
+
+    false
+}

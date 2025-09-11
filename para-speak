@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+VENV_DIR="$SCRIPT_DIR/python/venv"
+
+# Check if venv exists, if not suggest running verify-cli
+if [ ! -d "$VENV_DIR" ]; then
+    echo ""
+    echo "⚠️  Python virtual environment not found!"
+    echo ""
+    echo "Please run the environment setup first:"
+    echo "  cargo run -p verify-cli"
+    echo ""
+    exit 1
+fi
+
+# Set Python path for PyO3
+export PYO3_PYTHON="$VENV_DIR/bin/python"
+echo "Using Python: $PYO3_PYTHON"
+
+# Build and run the CLI
+cargo run -p para-speak-cli -- "$@"

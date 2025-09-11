@@ -1,0 +1,16 @@
+[package]
+name = "shortcut-matcher"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+config = { path = "../config" }
+rdev = { workspace = true }
+log = { path = "../log" }
+thiserror = { workspace = true }
+crossbeam-channel = { workspace = true }
+parking_lot = { workspace = true }
+
+[dev-dependencies]
+config = { path = "../config" }
+test-utils = { path = "../test-utils" }

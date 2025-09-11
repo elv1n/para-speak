@@ -1,0 +1,11 @@
+[package]
+name = "shortcut-listener"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rdev = { workspace = true }
+crossbeam-channel = { workspace = true }
+parking_lot = { workspace = true }
+log = { workspace = true }
+shortcut-matcher = { path = "../../core/shortcut-matcher" }

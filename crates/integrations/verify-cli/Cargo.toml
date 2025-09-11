@@ -1,0 +1,17 @@
+[package]
+name = "verify-cli"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "verify-cli"
+path = "src/main.rs"
+
+[dependencies]
+indicatif = "0.18"
+reqwest = { version = "0.12", features = ["stream", "blocking"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "fs"] }
+futures-util = "0.3"
+thiserror = "2.0"
+which = "7.0"
+dotenv = "0.15"

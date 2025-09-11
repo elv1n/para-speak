@@ -1,0 +1,12 @@
+[package]
+name = "audio"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+cpal = { workspace = true }
+hound = { workspace = true }
+crossbeam-channel = { workspace = true }
+thiserror = { workspace = true }
+log = { path = "../log" }
+config = { path = "../config" }
