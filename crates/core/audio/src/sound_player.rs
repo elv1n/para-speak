@@ -43,7 +43,7 @@ impl PreloadedSound {
     }
 }
 
-static SOUNDS: OnceLock<Option<(PreloadedSound, PreloadedSound, PreloadedSound)>> = OnceLock::new();
+static SOUNDS: OnceLock<Option<(PreloadedSound, PreloadedSound, PreloadedSound, PreloadedSound)>> = OnceLock::new();
 
 pub fn preload_sounds() {
     let start_time = std::time::Instant::now();
@@ -60,15 +60,20 @@ pub fn preload_sounds() {
         .join("sounds")
         .join("complete.wav");
 
+    let error_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("sounds")
+        .join("error.wav");
+
     let sounds = match (
         PreloadedSound::load_from_file(&on_path),
         PreloadedSound::load_from_file(&off_path),
         PreloadedSound::load_from_file(&complete_path),
+        PreloadedSound::load_from_file(&error_path),
     ) {
-        (Ok(on_sound), Ok(off_sound), Ok(complete_sound)) => {
-            Some((on_sound, off_sound, complete_sound))
+        (Ok(on_sound), Ok(off_sound), Ok(complete_sound), Ok(error_sound)) => {
+            Some((on_sound, off_sound, complete_sound, error_sound))
         }
-        (Err(e), _, _) | (_, Err(e), _) | (_, _, Err(e)) => {
+        (Err(e), _, _, _) | (_, Err(e), _, _) | (_, _, Err(e), _) | (_, _, _, Err(e)) => {
             log::warn!("Failed to load audio feedback sounds: {}", e);
             None
         }
@@ -98,20 +103,26 @@ pub fn preload_sounds() {
 }
 
 pub fn play_start_sound() {
-    if let Some(Some((ref on_sound, _, _))) = SOUNDS.get() {
+    if let Some(Some((ref on_sound, _, _, _))) = SOUNDS.get() {
         play_async(on_sound.samples.clone(), on_sound.channels);
     }
 }
 
 pub fn play_stop_sound() {
-    if let Some(Some((_, ref off_sound, _))) = SOUNDS.get() {
+    if let Some(Some((_, ref off_sound, _, _))) = SOUNDS.get() {
         play_async(off_sound.samples.clone(), off_sound.channels);
     }
 }
 
 pub fn play_complete_sound() {
-    if let Some(Some((_, _, ref complete_sound))) = SOUNDS.get() {
+    if let Some(Some((_, _, ref complete_sound, _))) = SOUNDS.get() {
         play_async(complete_sound.samples.clone(), complete_sound.channels);
+    }
+}
+
+pub fn play_error_sound() {
+    if let Some(Some((_, _, _, ref error_sound))) = SOUNDS.get() {
+        play_async(error_sound.samples.clone(), error_sound.channels);
     }
 }
 

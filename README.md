@@ -6,13 +6,6 @@ Local speech-to-text CLI tool powered by NVIDIA Parakeet model. Minimal idle foo
 
 **Note**: Para-speak is in its early stages and available on macOS only. Many decisions are still being made, and it will mature over time.
 
-## Goals
-
-- **Fast**: Rust-based with optimized audio pipeline, minimal latency
-- **Lightweight**: Models load on-demand and release when idle to minimize resource usage  
-- **Flexible**: Advanced keyboard shortcuts with sequences, combinations, and double-tap support
-- **Practical**: Accurate enough for a daily use
-
 ## Quick Start
 
 ```bash

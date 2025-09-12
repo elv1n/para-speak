@@ -1,5 +1,5 @@
 use crate::registry::{create_default_registry, ComponentRegistry};
-use audio::AudioRecorder;
+use audio::{play_error_sound, AudioRecorder};
 use config::Config;
 use ml_core::TranscriptionService;
 use shortcut_matcher::ShortcutAction;
@@ -44,7 +44,10 @@ impl Controllers {
                 .audio
                 .lock()
                 .map_err(|e| anyhow::anyhow!("Failed to lock audio: {}", e))?;
-            audio.start_recording()?;
+            if let Err(e) = audio.start_recording() {
+                play_error_sound();
+                return Err(e.into());
+            }
         }
 
         let _ = self.registry.notify_start();
@@ -103,7 +106,10 @@ impl Controllers {
                 .audio
                 .lock()
                 .map_err(|e| anyhow::anyhow!("Failed to lock audio: {}", e))?;
-            audio.resume_recording()?;
+            if let Err(e) = audio.resume_recording() {
+                play_error_sound();
+                return Err(e.into());
+            }
         }
 
         log::debug!("Resuming transcription");

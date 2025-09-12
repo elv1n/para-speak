@@ -35,7 +35,7 @@ fn simulate_paste() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let delay = time::Duration::from_millis(50);
-
+    thread::sleep(delay);
     simulate(&EventType::KeyPress(modifier_key))?;
     thread::sleep(delay);
 
