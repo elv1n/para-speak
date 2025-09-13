@@ -14,7 +14,9 @@
   - Multiple replacements separated by semicolons
   - Word-boundary aware matching (only whole words are replaced)
   - Uses Aho-Corasick algorithm for efficient pattern matching
-  - Include default_replacements for common filler words (Uh, uh, ah, oh, um, Um, Oh, so. (with a dot)) 
+  - Include default_replacements for common filler words (Uh, uh, ah, oh, um, Um, Oh, so. (with a dot))
+
+- Added `verify-cli list` command to display downloaded ML models with sizes 
 
 ### Improvements
 - Audio recording now captures last 500ms to prevent cutting off speech

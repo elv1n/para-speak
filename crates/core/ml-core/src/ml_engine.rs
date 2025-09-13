@@ -1,5 +1,5 @@
 use crate::ml_error::{Result, TranscriptionError};
-use crate::model_utils::{get_model_cache_path, model_exists};
+use ml_utils::{get_model_cache_path, model_exists};
 use config::Config;
 use log::{debug, info};
 use pyo3::prelude::*;

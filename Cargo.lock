@@ -436,6 +436,7 @@ dependencies = [
  "clap",
  "dotenv",
  "log 0.1.0",
+ "ml-utils",
 ]
 
 [[package]]
@@ -1579,11 +1580,16 @@ dependencies = [
  "aho-corasick",
  "config",
  "log 0.4.27",
+ "ml-utils",
  "numpy",
  "pyo3",
  "pyo3-build-config",
  "thiserror 2.0.16",
 ]
+
+[[package]]
+name = "ml-utils"
+version = "0.1.0"
 
 [[package]]
 name = "native-tls"
@@ -3157,11 +3163,13 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 name = "verify-cli"
 version = "0.1.0"
 dependencies = [
+ "clap",
  "config",
  "dotenv",
  "futures-util",
  "indicatif",
  "ml-core",
+ "ml-utils",
  "reqwest",
  "thiserror 2.0.16",
  "tokio",

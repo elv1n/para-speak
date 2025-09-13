@@ -5,7 +5,7 @@ use std::io::{Read, Write};
 use reqwest::blocking::Client;
 use thiserror::Error;
 use config::Config;
-use ml_core::model_utils::{get_models_dir, get_model_cache_path, model_exists, REQUIRED_FILES};
+use ml_utils::{get_models_dir, get_model_cache_path, model_exists, REQUIRED_FILES};
 
 #[derive(Error, Debug)]
 pub enum ModelDownloadError {

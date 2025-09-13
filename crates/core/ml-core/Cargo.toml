@@ -6,6 +6,7 @@ license.workspace = true
 
 [dependencies]
 config = { path = "../config" }
+ml-utils = { path = "../ml-utils" }
 aho-corasick = "1.1"
 pyo3 = { workspace = true }
 numpy = { workspace = true }

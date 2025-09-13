@@ -1,11 +1,28 @@
 mod model_download;
+mod model_list;
 mod python_env;
 
+use clap::{Parser, Subcommand};
 use model_download::ModelDownloader;
+use model_list::ModelInventory;
 use python_env::PythonEnvironment;
 use std::env;
 use std::path::PathBuf;
 use std::process;
+
+#[derive(Parser)]
+#[command(name = "verify-cli")]
+#[command(about = "Para-Speak Environment Verifier")]
+#[command(version)]
+struct Cli {
+    #[command(subcommand)]
+    command: Option<Commands>,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    List,
+}
 
 fn get_project_root() -> PathBuf {
     env::current_dir().expect("Failed to get current directory")
@@ -74,21 +91,34 @@ fn run_verification() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn main() {
-    print_header();
-
-    match run_verification() {
-        Ok(()) => {
-            print_success();
-            process::exit(0);
+    let cli = Cli::parse();
+    
+    match cli.command {
+        Some(Commands::List) => {
+            let inventory = ModelInventory::new();
+            if let Err(e) = inventory.list_models() {
+                eprintln!("❌ Failed to list models: {}", e);
+                process::exit(1);
+            }
         }
-        Err(e) => {
-            eprintln!();
-            eprintln!("❌ Verification failed: {}", e);
-            eprintln!();
-            eprintln!("Please fix the issues above and try again.");
-            eprintln!("If you continue to have problems, please report an issue at:");
-            eprintln!("  https://github.com/your-repo/para-speak/issues");
-            process::exit(1);
+        None => {
+            print_header();
+
+            match run_verification() {
+                Ok(()) => {
+                    print_success();
+                    process::exit(0);
+                }
+                Err(e) => {
+                    eprintln!();
+                    eprintln!("❌ Verification failed: {}", e);
+                    eprintln!();
+                    eprintln!("Please fix the issues above and try again.");
+                    eprintln!("If you continue to have problems, please report an issue at:");
+                    eprintln!("  https://github.com/your-repo/para-speak/issues");
+                    process::exit(1);
+                }
+            }
         }
     }
 }

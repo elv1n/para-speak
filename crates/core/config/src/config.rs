@@ -1,4 +1,4 @@
-use crate::available_models::get_default_model;
+use ml_utils::{get_default_model, is_model_supported, AVAILABLE_MODELS};
 use crate::parse_replace_pairs::parse_replace_pairs;
 use clap::Parser;
 use std::collections::HashMap;
@@ -262,13 +262,11 @@ impl Config {
     }
 
     fn validate(&self) {
-        use crate::available_models::is_model_supported;
-        
         if let Some(ref model) = self.model {
             if !is_model_supported(model) && !self.force {
                 eprintln!("Error: Model '{}' is not in the list of supported models.", model);
                 eprintln!("Supported models:");
-                for model in crate::available_models::AVAILABLE_MODELS {
+                for model in AVAILABLE_MODELS {
                     eprintln!("  - {}", model);
                 }
                 eprintln!("\nTo use an unsupported model, add --force flag or set PARA_FORCE=true");

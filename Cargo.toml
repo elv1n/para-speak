@@ -8,6 +8,7 @@ members = [
     "crates/core/log",
     "crates/core/test-utils",
     "crates/core/ml-core",
+    "crates/core/ml-utils",
     "crates/integrations/focus-detector",
     "crates/integrations/shortcut-listener",
     "crates/integrations/cli",

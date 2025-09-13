@@ -160,6 +160,12 @@ Para-speak is designed to be cross-platform with support for multiple models in 
 - **Microphone**: For audio capture
 - **Accessibility**: For global keyboard shortcuts to work system-wide
 
+## Verify CLI
+
+Tool for managing ML models:
+- `cargo run -p verify-cli` - Download and verify ML models
+- `cargo run -p verify-cli list` - List downloaded models with sizes
+
 ## License
 
 MIT
