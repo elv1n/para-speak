@@ -1,4 +1,6 @@
+use crate::parse_replace_pairs::parse_replace_pairs;
 use clap::Parser;
+use std::collections::HashMap;
 use std::sync::{Arc, OnceLock};
 
 static CONFIG: OnceLock<Arc<Config>> = OnceLock::new();
@@ -91,6 +93,7 @@ pub struct Config {
     pub transcribe_on_pause: bool,
 
 
+
     #[arg(
         long = "shortcut-resolution-delay-ms",
         env = "PARA_SHORTCUT_RESOLUTION_DELAY_MS",
@@ -110,6 +113,9 @@ pub struct Config {
 
     #[arg(skip)]
     pub initial_buffer_seconds: u32,
+
+    #[arg(skip)]
+    pub transcription_replace_text: HashMap<String, Option<String>>,
 }
 
 impl Default for Config {
@@ -143,6 +149,9 @@ impl Config {
             config.cancel_keys = vec!["double(Escape, 300)".to_string()];
         }
 
+        let replace_str = std::env::var("PARA_REPLACE").ok();
+        config.transcription_replace_text = parse_replace_pairs(&replace_str);
+
         config.validate();
         config
     }
@@ -167,6 +176,7 @@ impl Config {
             memory_monitor: false,
             sample_rate: 48000,
             initial_buffer_seconds: 15,
+            transcription_replace_text: HashMap::new(),
         }
     }
 
@@ -231,7 +241,11 @@ impl Config {
     }
 
     fn validate(&self) {
+        
+    }
 
+    pub fn transcription_replacements(&self) -> &HashMap<String, Option<String>> {
+        &self.transcription_replace_text
     }
 }
 
@@ -282,6 +296,7 @@ mod tests {
             memory_monitor: false,
             sample_rate: 48000,
             initial_buffer_seconds: 15,
+            transcription_replace_text: HashMap::new(),
         };
         
         if config.start_keys.is_empty() {

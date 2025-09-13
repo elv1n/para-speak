@@ -1,7 +1,9 @@
 use crate::{
     ml_engine::MLEngine,
     ml_error::Result,
+    text_manipulation::handle_transcribed_text,
 };
+use config::Config;
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Instant;
 
@@ -45,18 +47,17 @@ impl TranscriptionService {
 
         match result {
             Ok(text) => {
-                let trimmed = text.trim().to_string();
-                if trimmed.is_empty() || trimmed.len() < 3 {
-                    log::debug!("[ML] Empty transcription");
+                let processed = handle_transcribed_text(text, Config::global());
+                if processed.is_empty() {
                     return Ok(String::new());
                 }
-                log::debug!("[ML] Transcription successful: {}", trimmed);
+                log::debug!("[ML] Transcription successful: {}", processed);
                 log::info!(
                     "[ML] Transcription completed in {:.2}s, {} chars returned",
                     elapsed.as_secs_f32(),
-                    trimmed.len()
+                    processed.len()
                 );
-                Ok(trimmed)
+                Ok(processed)
             }
             Err(e) => {
                 log::error!(

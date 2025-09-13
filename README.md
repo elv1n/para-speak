@@ -64,6 +64,9 @@ PARA_SPOTIFY_REDUCE_BY=50                # OR reduce volume by amount (0-100)
 # Transcription behavior
 PARA_TRANSCRIBE_ON_PAUSE=true            # Experimental: transcribe when pausing (not just on stop)
 
+# Transcription post-processing
+PARA_REPLACE="uh;Uh;um:;ui:UI"           # Replace/remove words in transcriptions
+
 # Advanced
 PARA_SHORTCUT_RESOLUTION_DELAY_MS=50     # Delay for resolving shortcut conflicts
 PARA_MEMORY_MONITOR=true                 # Enable memory usage reporting
@@ -85,6 +88,7 @@ PARA_DEBUG=true                          # Enable debug mode with verbose output
 | `--spotify-recording-volume` | `PARA_SPOTIFY_RECORDING_VOLUME` | Set Spotify to specific volume (0-100) during recording | None |
 | `--spotify-reduce-by` | `PARA_SPOTIFY_REDUCE_BY` | Reduce Spotify volume by amount (0-100) during recording | None |
 | `--transcribe-on-pause` | `PARA_TRANSCRIBE_ON_PAUSE` | Transcribe when pausing (not just on stop) | `false` |
+| `--replace` | `PARA_REPLACE` | Text replacements for transcription post-processing. Format: `"from:to"` for replacement, `"from:"` or `"from"` for removal. Separate multiple with semicolons. Example: `"uh;Uh;um:;ui:UI"` | None |
 | `--shortcut-resolution-delay-ms` | `PARA_SHORTCUT_RESOLUTION_DELAY_MS` | Delay for resolving shortcut conflicts (ms) | `50` |
 | `--memory-monitor` | `PARA_MEMORY_MONITOR` | Enable memory usage reporting | `false` |
 

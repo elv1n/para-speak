@@ -1576,6 +1576,8 @@ dependencies = [
 name = "ml-core"
 version = "0.1.0"
 dependencies = [
+ "aho-corasick",
+ "config",
  "log 0.4.27",
  "numpy",
  "pyo3",
