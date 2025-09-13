@@ -1,3 +1,4 @@
+use crate::available_models::get_default_model;
 use crate::parse_replace_pairs::parse_replace_pairs;
 use clap::Parser;
 use std::collections::HashMap;
@@ -116,6 +117,20 @@ pub struct Config {
 
     #[arg(skip)]
     pub transcription_replace_text: HashMap<String, Option<String>>,
+
+    #[arg(
+        long = "model",
+        env = "PARA_MODEL",
+        help = "ML model to use for transcription"
+    )]
+    pub model: Option<String>,
+
+    #[arg(
+        long = "force",
+        env = "PARA_FORCE",
+        help = "Force using an unsupported model (use at your own risk)"
+    )]
+    pub force: bool,
 }
 
 impl Default for Config {
@@ -152,6 +167,10 @@ impl Config {
         let replace_str = std::env::var("PARA_REPLACE").ok();
         config.transcription_replace_text = parse_replace_pairs(&replace_str);
 
+        if config.model.is_none() {
+            config.model = Some(get_default_model());
+        }
+
         config.validate();
         config
     }
@@ -177,6 +196,8 @@ impl Config {
             sample_rate: 48000,
             initial_buffer_seconds: 15,
             transcription_replace_text: HashMap::new(),
+            model: Some(get_default_model()),
+            force: false,
         }
     }
 
@@ -241,11 +262,31 @@ impl Config {
     }
 
     fn validate(&self) {
+        use crate::available_models::is_model_supported;
         
+        if let Some(ref model) = self.model {
+            if !is_model_supported(model) && !self.force {
+                eprintln!("Error: Model '{}' is not in the list of supported models.", model);
+                eprintln!("Supported models:");
+                for model in crate::available_models::AVAILABLE_MODELS {
+                    eprintln!("  - {}", model);
+                }
+                eprintln!("\nTo use an unsupported model, add --force flag or set PARA_FORCE=true");
+                std::process::exit(1);
+            }
+            
+            if !is_model_supported(model) && self.force {
+                log::warn!("Using unsupported model '{}' with --force flag", model);
+            }
+        }
     }
 
     pub fn transcription_replacements(&self) -> &HashMap<String, Option<String>> {
         &self.transcription_replace_text
+    }
+
+    pub fn model_name(&self) -> &str {
+        self.model.as_ref().unwrap()
     }
 }
 
@@ -297,6 +338,8 @@ mod tests {
             sample_rate: 48000,
             initial_buffer_seconds: 15,
             transcription_replace_text: HashMap::new(),
+            model: Some(get_default_model()),
+            force: false,
         };
         
         if config.start_keys.is_empty() {

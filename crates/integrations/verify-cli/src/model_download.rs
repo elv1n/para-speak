@@ -4,15 +4,8 @@ use std::path::PathBuf;
 use std::io::{Read, Write};
 use reqwest::blocking::Client;
 use thiserror::Error;
-use std::env;
-
-const MODEL_NAME: &str = "mlx-community/parakeet-tdt-0.6b-v3";
-const REQUIRED_FILES: &[&str] = &[
-    "config.json",
-    "model.safetensors", 
-    "tokenizer.model",
-    "tokenizer.vocab"
-];
+use config::Config;
+use ml_core::model_utils::{get_models_dir, get_model_cache_path, model_exists, REQUIRED_FILES};
 
 #[derive(Error, Debug)]
 pub enum ModelDownloadError {
@@ -26,34 +19,17 @@ pub enum ModelDownloadError {
     Unknown(String),
 }
 
-fn get_models_dir() -> PathBuf {
-    env::current_dir()
-        .unwrap_or_else(|_| PathBuf::from("."))
-        .join("models")
-}
-
-fn model_exists() -> bool {
-    let models_dir = get_models_dir();
-    let model_id = MODEL_NAME.replace("/", "--");
-    let cache_path = models_dir.join("hub").join(format!("models--{}", model_id));
-    let snapshot_path = cache_path.join("snapshots").join("main");
-    
-    for file in REQUIRED_FILES {
-        if !snapshot_path.join(file).exists() {
-            return false;
-        }
-    }
-    
-    true
-}
 
 pub struct ModelDownloader {
     client: Client,
-    models_dir: PathBuf,
+    model_name: String,
 }
 
 impl ModelDownloader {
     pub fn new() -> Result<Self, ModelDownloadError> {
+        let config = Config::global();
+        let model_name = config.model_name().to_string();
+        
         let client = Client::builder()
             .timeout(std::time::Duration::from_secs(300))
             .build()?;
@@ -63,14 +39,14 @@ impl ModelDownloader {
         
         Ok(Self {
             client,
-            models_dir,
+            model_name,
         })
     }
     
     pub fn download_if_needed(&self) -> Result<(), ModelDownloadError> {
-        println!("🔍 Checking for model: {}", MODEL_NAME);
+        println!("🔍 Checking for model: {}", self.model_name);
         
-        if model_exists() {
+        if model_exists(&self.model_name) {
             println!("✅ Model already downloaded");
             return Ok(());
         }
@@ -185,14 +161,14 @@ impl ModelDownloader {
         }
         
         println!();
-        println!("✅ Successfully downloaded model {}", MODEL_NAME);
+        println!("✅ Successfully downloaded model {}", self.model_name);
         println!("   Model location: {:?}", snapshot_path);
         
         Ok(())
     }
     
     fn construct_download_url(&self, filename: &str) -> String {
-        format!("https://huggingface.co/{}/resolve/main/{}", MODEL_NAME, filename)
+        format!("https://huggingface.co/{}/resolve/main/{}", self.model_name, filename)
     }
     
     fn get_file_size(&self, url: &str) -> Result<u64, ModelDownloadError> {
@@ -210,8 +186,7 @@ impl ModelDownloader {
     }
     
     fn ensure_cache_dirs(&self) -> Result<PathBuf, ModelDownloadError> {
-        let model_id = MODEL_NAME.replace("/", "--");
-        let cache_path = self.models_dir.join("hub").join(format!("models--{}", model_id));
+        let cache_path = get_model_cache_path(&self.model_name);
         let snapshots_dir = cache_path.join("snapshots");
         
         fs::create_dir_all(&snapshots_dir)?;

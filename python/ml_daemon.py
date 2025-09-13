@@ -8,199 +8,36 @@ from pathlib import Path
 
 try:
     import torch
-    import soundfile as sf
-    import numpy as np
-    import io
-    import librosa
-    import traceback
 except ImportError as e:
     print(json.dumps({"error": f"Failed to import required modules: {e}"}), flush=True)
     sys.exit(1)
 
-class ParakeetMLXModel:
-    def __init__(self, model_name="mlx-community/parakeet-tdt-0.6b-v3", verbose=False):
-        project_root = Path(__file__).parent.parent
-        models_dir = project_root / "models"
-        os.environ["HF_HOME"] = str(models_dir)
-        os.environ["HUGGINGFACE_HUB_CACHE"] = str(models_dir / "hub")
-        
-        self.model_name = model_name
-        self.model = None
-        self.verbose = verbose
-        
-        if verbose:
-            logging.basicConfig(level=logging.DEBUG)
-        else:
-            logging.basicConfig(level=logging.WARNING)
-            
-        self.logger = logging.getLogger("parakeet_mlx_model")
+from python.models.model_factory import create_model
+from python.models.base_model import BaseTranscriptionModel
 
-    def load_model(self):
-        if self.model is not None:
-            return self.model
-        
-        self.logger.info(f"Loading {self.model_name}...")
-        
-        try:
-            from parakeet_mlx import from_pretrained
-            self.model = from_pretrained(self.model_name)
-            self.logger.info("Model loaded successfully")
-            return self.model
-        except ImportError:
-            self.logger.error("parakeet_mlx or mlx not installed. Please run: pip install mlx parakeet-mlx")
-            raise
-        except Exception as e:
-            self.logger.error(f"Error loading model: {str(e)}")
-            raise
 
-    def unload(self):
-        if self.model is not None:
-            del self.model
-            self.model = None
-            self.logger.info("Model unloaded")
-
-    def transcribe_raw(self, pcm_bytes: bytes, sample_rate: int = 48000, channels: int = 1) -> str:
-        if not pcm_bytes:
-            return ""
-        
-        try:
-            import mlx.core as mx
-            from parakeet_mlx import audio as parakeet_audio
-            
-            audio = np.frombuffer(pcm_bytes, dtype=np.int16).astype(np.float32) / 32768.0
-            
-            if channels > 1:
-                audio = audio.reshape(-1, channels).mean(axis=1)
-            
-            if sample_rate != 16000:
-                audio = librosa.resample(audio, orig_sr=sample_rate, target_sr=16000)
-            
-            audio_mx = mx.array(audio)
-            
-            features = parakeet_audio.get_logmel(audio_mx, self.model.preprocessor_config)
-            
-            if len(features.shape) == 2:
-                features = mx.expand_dims(features, axis=0)
-            
-            encoded_result = self.model.encoder(features)
-            encoded = encoded_result[0] if isinstance(encoded_result, tuple) else encoded_result
-            
-            decoded_tokens, _ = self.model.decode(encoded)
-            
-            if decoded_tokens and decoded_tokens[0]:
-                text_parts = []
-                for token in decoded_tokens[0]:
-                    if hasattr(token, 'text'):
-                        text_parts.append(token.text)
-                    elif hasattr(token, 'token'):
-                        text_parts.append(str(token.token))
-                return ''.join(text_parts)
-            return ""
-                    
-        except Exception as e:
-            self.logger.error(f"Error during raw transcription: {str(e)}")
-            self.logger.debug(f"Full traceback: {traceback.format_exc()}")
-            raise RuntimeError(f"Transcription failed: {str(e)}")
-    
-    def transcribe_from_bytes(self, audio_bytes: bytes) -> str:
-        if self.model is None:
-            self.load_model()
-        
-        if not audio_bytes:
-            return ""
-        
-        try:
-            # Import MLX modules for direct processing
-            import mlx.core as mx
-            from parakeet_mlx import audio as parakeet_audio
-            
-            # Load audio from bytes into memory
-            audio_stream = io.BytesIO(audio_bytes)
-            
-            audio_data, sample_rate = sf.read(audio_stream)
-            
-            
-            # Ensure audio is mono and at 16kHz
-            if len(audio_data.shape) > 1:
-                audio_data = audio_data.mean(axis=1)
-            
-            if sample_rate != 16000:
-                # Resample to 16kHz if needed
-                audio_data = librosa.resample(audio_data, orig_sr=sample_rate, target_sr=16000)
-            
-            # Convert to MLX array
-            audio_mx = mx.array(audio_data.astype(np.float32))
-            
-            # Get log-mel features
-            features = parakeet_audio.get_logmel(audio_mx, self.model.preprocessor_config)
-            
-            # Add batch dimension if needed
-            if len(features.shape) == 2:
-                features = mx.expand_dims(features, axis=0)
-            
-            # Encode features
-            encoded_result = self.model.encoder(features)
-            encoded = encoded_result[0] if isinstance(encoded_result, tuple) else encoded_result
-            
-            # Decode to tokens
-            decoded_tokens, _ = self.model.decode(encoded)
-            
-            # Convert tokens to text
-            if decoded_tokens and decoded_tokens[0]:
-                text_parts = []
-                for token in decoded_tokens[0]:
-                    if hasattr(token, 'text'):
-                        text_parts.append(token.text)
-                    elif hasattr(token, 'token'):
-                        text_parts.append(str(token.token))
-                return ''.join(text_parts)
-            return ""
-                    
-        except Exception as e:
-            self.logger.error(f"Error during transcription from bytes: {str(e)}")
-            self.logger.debug(f"Full traceback: {traceback.format_exc()}")
-            raise
 
 
 class MLDaemon:
     def __init__(self):
-        self.model = None
+        self.model: BaseTranscriptionModel = None
         self.model_type = None
         self.device = None
         logging.basicConfig(level=logging.WARNING)  # Minimal logging for daemon
         
-    def load_model(self, model_type="parakeet"):
+    def load_model(self, model_name: str):
+        """Load model by full name. No defaults or special cases."""
         try:
-            # Check if we're on Apple Silicon for MLX support
-            if sys.platform != "darwin" or platform.machine() != "arm64":
-                raise RuntimeError("ParakeetMLX is only supported on Apple Silicon (macOS arm64)")
+            # Create and load model using factory
+            self.model = create_model(model_name, verbose=False)
+            self.model.load_model()
+            self.model_type = model_name
             
-            # Set up device
-            if torch.backends.mps.is_available():
-                self.device = torch.device("mps")
-            elif torch.cuda.is_available():
-                self.device = torch.device("cuda")
-            else:
-                self.device = torch.device("cpu")
+            # Get device info from model
+            device_info = self.model.get_device_info()
+            logging.info(f"Model loaded on device: {device_info}")
             
-            # Load ParakeetMLX model
-            if model_type == "parakeet" or "parakeet" in model_type.lower():
-                model_name = "mlx-community/parakeet-tdt-0.6b-v3"
-                self.model = ParakeetMLXModel(model_name=model_name, verbose=False)
-                self.model.load_model()
-                self.model_type = model_type
-                
-                return f"parakeet-mlx-{model_name.split('/')[-1]}"
-            elif model_type == "test":
-                # Test mode - use parakeet model but return test name
-                model_name = "mlx-community/parakeet-tdt-0.6b-v3"
-                self.model = ParakeetMLXModel(model_name=model_name, verbose=False)
-                self.model.load_model()
-                self.model_type = model_type
-                
-                return "parakeet-mlx-test"
-            else:
-                raise RuntimeError(f"Unsupported model type: {model_type}")
+            return f"Loaded: {model_name}"
                 
         except Exception as e:
             raise RuntimeError(f"Model loading failed: {str(e)}")

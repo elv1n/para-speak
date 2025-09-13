@@ -1,8 +1,4 @@
-use crate::{
-    ml_engine::MLEngine,
-    ml_error::Result,
-    text_manipulation::handle_transcribed_text,
-};
+use crate::{ml_engine::MLEngine, ml_error::Result, text_manipulation::handle_transcribed_text};
 use config::Config;
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Instant;
@@ -71,14 +67,19 @@ impl TranscriptionService {
     }
 
     pub fn load_model(&self, model_type: Option<&str>) -> Result<String> {
-        let model = model_type.unwrap_or("parakeet");
+        let config = Config::global();
+        let model = model_type.unwrap_or(config.model_name());
         let mut engine = self.engine.lock()?;
         engine.load_model(model)?;
-        Ok(format!("parakeet-mlx-{}", model))
+        Ok(format!(
+            "parakeet-mlx-{}",
+            model.split('/').next_back().unwrap_or(model)
+        ))
     }
 
     pub fn is_ready(&self) -> bool {
-        self.engine.lock()
+        self.engine
+            .lock()
             .map(|engine| engine.is_initialized())
             .unwrap_or(false)
     }

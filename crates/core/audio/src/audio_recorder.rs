@@ -362,6 +362,9 @@ fn handle_command(
                 return Ok(Some(Response::Error(AudioError::NotRecording)));
             }
 
+            // Add delay to capture last bits of audio
+            std::thread::sleep(std::time::Duration::from_millis(500));
+
             let current_data = if state.stream.is_some() {
                 state.buffer.lock().unwrap().read_all()
             } else {

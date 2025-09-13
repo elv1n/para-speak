@@ -261,11 +261,10 @@ mod tests {
         replacements.insert("i".to_string(), Some("I".to_string()));
         replacements.insert("dont".to_string(), Some("don't".to_string()));
 
-        // assert_eq!(
-        //     apply_replacements("so like i dont know basically what you know", &replacements),
-        //     "so  I don't know  what you know"
-        // );
-        log::info!("replacements: {:?}", replacements);
+        assert_eq!(
+            apply_replacements("so like i dont know basically what you know", &replacements),
+            "so I don't know what "
+        );
         assert_eq!(
             apply_replacements("i think like basically you know i dont", &replacements),
             "I think I don't"

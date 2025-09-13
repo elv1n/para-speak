@@ -3157,9 +3157,11 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 name = "verify-cli"
 version = "0.1.0"
 dependencies = [
+ "config",
  "dotenv",
  "futures-util",
  "indicatif",
+ "ml-core",
  "reqwest",
  "thiserror 2.0.16",
  "tokio",

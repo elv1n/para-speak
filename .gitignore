@@ -15,7 +15,7 @@ __pycache__/
 .python-version
 
 # Models (downloaded at runtime)
-models/
+/models/
 
 # Added by cargo
 

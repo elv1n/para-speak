@@ -16,3 +16,5 @@ futures-util = "0.3"
 thiserror = "2.0"
 which = "7.0"
 dotenv = "0.15"
+config = { path = "../../core/config" }
+ml-core = { path = "../../core/ml-core" }

@@ -1,5 +1,6 @@
 use crate::ml_error::{Result, TranscriptionError};
 use crate::model_utils::{get_model_cache_path, model_exists};
+use config::Config;
 use log::{debug, info};
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
@@ -39,15 +40,17 @@ impl MLEngine {
             return Ok(());
         }
 
-        if !model_exists() {
+        let config = Config::global();
+        let model_name = config.model_name();
+
+        if !model_exists(model_name) {
             return Err(TranscriptionError::ModelLoadingError(
-                "Model not found. Please download it first by running:\n  cargo run -p verify-cli"
-                    .to_string(),
+                format!("Model '{}' not found. Please download it first by running:\n  cargo run -p verify-cli", model_name)
             ));
         }
 
-        let model_path = get_model_cache_path();
-        log::debug!("[MLEngine] Model available at: {:?}", model_path);
+        let model_path = get_model_cache_path(model_name);
+        log::debug!("[MLEngine] Model '{}' available at: {:?}", model_name, model_path);
 
         self.python_env.initialize()?;
         self.model_state
@@ -136,6 +139,9 @@ impl PythonEnvironment {
 
         let python_path = format!("{}{}", cwd_str, PYTHON_PATH);
         path_list.call_method1("append", (python_path,))?;
+        
+        // Add project root so "python" module can be found
+        path_list.call_method1("append", (cwd_str.clone(),))?;
 
         let glob_module = py.import("glob")?;
         let venv_pattern = format!("{}{}/*/site-packages", cwd_str, VENV_SITE_PACKAGES);

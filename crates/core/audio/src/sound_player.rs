@@ -121,6 +121,7 @@ pub fn play_complete_sound() {
 }
 
 pub fn play_error_sound() {
+    log::debug!("Playing error sound");
     if let Some(Some((_, _, _, ref error_sound))) = SOUNDS.get() {
         play_async(error_sound.samples.clone(), error_sound.channels);
     }

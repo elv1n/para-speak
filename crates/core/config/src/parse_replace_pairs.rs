@@ -39,6 +39,7 @@ fn default_replacements() -> HashMap<String, Option<String>> {
     defaults.insert("Um".to_string(), None);
     defaults.insert("Oh".to_string(), None);
     defaults.insert("so.".to_string(), None);
+    defaults.insert("if if".to_string(), Some("if".to_string()));
 
     defaults
 }

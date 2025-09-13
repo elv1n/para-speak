@@ -79,18 +79,32 @@ PARA_DEBUG=true                          # Enable debug mode with verbose output
 
 | Option | Environment Variable | Description | Default |
 |--------|---------------------|-------------|---------|
-| `--debug` | `PARA_DEBUG` | Enable debug mode with verbose logging | `false` |
 | `--paste` | `PARA_PASTE` | Automatically paste transcribed text at cursor | `false` |
 | `--start-keys` | `PARA_START_KEYS` | Semicolon-separated list of key combinations to start recording | `double(ControlLeft, 300)` |
 | `--stop-keys` | `PARA_STOP_KEYS` | Semicolon-separated list of key combinations to stop recording | `ControlLeft` |
 | `--cancel-keys` | `PARA_CANCEL_KEYS` | Semicolon-separated list of key combinations to cancel recording | `double(Escape, 300)` |
 | `--pause-keys` | `PARA_PAUSE_KEYS` | Semicolon-separated list of key combinations to pause recording | None |
+| `--model` | `PARA_MODEL` | ML model to use for transcription | `mlx-community/parakeet-tdt-0.6b-v3` |
+| `--force` | `PARA_FORCE` | Force using an unsupported model | `false` |
 | `--spotify-recording-volume` | `PARA_SPOTIFY_RECORDING_VOLUME` | Set Spotify to specific volume (0-100) during recording | None |
 | `--spotify-reduce-by` | `PARA_SPOTIFY_REDUCE_BY` | Reduce Spotify volume by amount (0-100) during recording | None |
 | `--transcribe-on-pause` | `PARA_TRANSCRIBE_ON_PAUSE` | Transcribe when pausing (not just on stop) | `false` |
 | `--replace` | `PARA_REPLACE` | Text replacements for transcription post-processing. Format: `"from:to"` for replacement, `"from:"` or `"from"` for removal. Separate multiple with semicolons. Example: `"uh;Uh;um:;ui:UI"` | None |
 | `--shortcut-resolution-delay-ms` | `PARA_SHORTCUT_RESOLUTION_DELAY_MS` | Delay for resolving shortcut conflicts (ms) | `50` |
+| `--debug` | `PARA_DEBUG` | Enable debug mode with verbose logging | `false` |
 | `--memory-monitor` | `PARA_MEMORY_MONITOR` | Enable memory usage reporting | `false` |
+
+### Model Configuration
+
+You can specify which ML model to use via the `PARA_MODEL` environment variable:
+
+```bash
+PARA_MODEL="mlx-community/parakeet-tdt-1.1b" ./para-speak
+```
+To use an unsupported model, add the `--force` flag:
+```bash
+PARA_MODEL="custom/model" ./para-speak --force
+```
 
 ## Shortcut Syntax
 
