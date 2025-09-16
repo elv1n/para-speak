@@ -4,8 +4,7 @@ use std::path::PathBuf;
 use std::io::{Read, Write};
 use reqwest::blocking::Client;
 use thiserror::Error;
-use config::Config;
-use ml_utils::{get_models_dir, get_model_cache_path, model_exists, REQUIRED_FILES};
+use ml_utils::{get_models_dir, get_model_cache_path, get_model_info, get_default_model, verify_model_files};
 
 #[derive(Error, Debug)]
 pub enum ModelDownloadError {
@@ -26,17 +25,19 @@ pub struct ModelDownloader {
 }
 
 impl ModelDownloader {
-    pub fn new() -> Result<Self, ModelDownloadError> {
-        let config = Config::global();
-        let model_name = config.model_name().to_string();
-        
+    pub fn new(model_name: Option<String>) -> Result<Self, ModelDownloadError> {
+        let model_name = model_name.unwrap_or_else(|| {
+            std::env::var("PARA_MODEL")
+                .unwrap_or_else(|_| get_default_model())
+        });
+
         let client = Client::builder()
             .timeout(std::time::Duration::from_secs(300))
             .build()?;
-        
+
         let models_dir = get_models_dir();
         fs::create_dir_all(&models_dir)?;
-        
+
         Ok(Self {
             client,
             model_name,
@@ -45,24 +46,60 @@ impl ModelDownloader {
     
     pub fn download_if_needed(&self) -> Result<(), ModelDownloadError> {
         println!("🔍 Checking for model: {}", self.model_name);
-        
-        if model_exists(&self.model_name) {
-            println!("✅ Model already downloaded");
-            return Ok(());
+
+        match verify_model_files(&self.model_name) {
+            Ok(()) => {
+                println!("✅ Model already downloaded and verified");
+                return Ok(());
+            }
+            Err(err) => {
+                if err.contains("Model directory not found") || err.contains("Required file missing") {
+                    println!("📥 Model not found locally, starting download...");
+                } else if err.contains("File size mismatch") {
+                    println!("⚠️  Model files are incomplete:");
+                    println!("   {}", err);
+                    println!("📥 Re-downloading to fix incomplete files...");
+
+                    self.remove_incomplete_files()?;
+                } else {
+                    println!("⚠️  Model verification failed: {}", err);
+                    println!("📥 Re-downloading model...");
+                }
+            }
         }
-        
-        println!("📥 Model not found locally, starting download...");
-        self.download_model()
+
+        self.download_model()?;
+
+        println!("🔍 Verifying downloaded files...");
+        verify_model_files(&self.model_name)
+            .map_err(|e| ModelDownloadError::Unknown(format!("Model verification failed after download: {}", e)))?;
+
+        Ok(())
     }
-    
+
+    fn remove_incomplete_files(&self) -> Result<(), ModelDownloadError> {
+        let cache_path = get_model_cache_path(&self.model_name);
+        let snapshot_path = cache_path.join("snapshots").join("main");
+
+        if snapshot_path.exists() {
+            println!("🗑️  Removing incomplete files...");
+            fs::remove_dir_all(&snapshot_path)?;
+        }
+
+        Ok(())
+    }
+
     fn download_model(&self) -> Result<(), ModelDownloadError> {
         println!("   Calculating total download size...");
         println!();
-        
+
+        let model_info = get_model_info(&self.model_name)
+            .map_err(ModelDownloadError::Unknown)?;
+
         let mut total_size = 0u64;
         let mut file_info = Vec::new();
-        
-        for file in REQUIRED_FILES {
+
+        for file in model_info.required_files {
             let url = self.construct_download_url(file);
             match self.get_file_size(&url) {
                 Ok(size) => {

@@ -20,11 +20,7 @@ class BaseTranscriptionModel(ABC):
     @abstractmethod
     def transcribe_raw(self, pcm_bytes: bytes, sample_rate: int = 48000, channels: int = 1) -> str:
         pass
-    
-    @abstractmethod
-    def transcribe_from_bytes(self, audio_bytes: bytes) -> str:
-        pass
-    
+
     @abstractmethod
     def get_device_info(self) -> str:
         pass

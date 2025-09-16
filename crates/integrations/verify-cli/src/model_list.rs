@@ -1,6 +1,6 @@
 use std::fs;
 use std::path::Path;
-use ml_utils::{get_models_dir, REQUIRED_FILES};
+use ml_utils::get_models_dir;
 
 pub struct ModelInventory;
 
@@ -72,15 +72,9 @@ impl ModelInventory {
             let snapshot_path = entry.path();
             
             if snapshot_path.is_dir() {
-                let all_files_exist = REQUIRED_FILES.iter().all(|file| {
-                    snapshot_path.join(file).exists()
-                });
-                
-                if all_files_exist {
-                    has_complete_model = true;
-                    total_size = Self::calculate_directory_size(&snapshot_path)?;
-                    break;
-                }
+                has_complete_model = true;
+                total_size = Self::calculate_directory_size(&snapshot_path)?;
+                break;
             }
         }
         

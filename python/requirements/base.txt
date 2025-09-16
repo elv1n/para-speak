@@ -1,0 +1,16 @@
+# Core dependencies - needed by all models
+numpy>=2.1.0,<3.0.0  # Use 2.x for better compatibility with PyTorch
+
+# Build dependencies
+Cython>=3.0.0
+
+# PyTorch for Apple Silicon - latest stable
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch>=2.8.0
+torchaudio>=2.8.0
+
+# Audio processing - latest
+soundfile>=0.13.1
+
+# Audio processing utilities
+librosa>=0.10.2

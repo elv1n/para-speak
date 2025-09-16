@@ -15,6 +15,7 @@ config = { path = "../../core/config" }
 shortcut-listener = { path = "../shortcut-listener" }
 clipboard = { path = "../../core/clipboard" }
 ml-core = { path = "../../core/ml-core" }
+ml-utils = { path = "../../core/ml-utils" }
 focus-detector = { path = "../focus-detector" }
 components = { path = "../components" }
 dashmap = "6.1"
@@ -26,9 +27,12 @@ shortcut-matcher = { path = "../../core/shortcut-matcher" }
 # Logging
 log = { path = "../../core/log" }
 
-# Error handling  
+# Error handling
 anyhow = "1.0"
 thiserror = "2.0"
+
+# Progress indicators
+indicatif = "0.18"
 
 # System interaction
 sysinfo = "0.32"

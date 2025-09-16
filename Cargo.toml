@@ -13,6 +13,7 @@ members = [
     "crates/integrations/shortcut-listener",
     "crates/integrations/cli",
     "crates/integrations/verify-cli",
+    "crates/integrations/ui",
 ]
 resolver = "2"
 
@@ -46,6 +47,8 @@ winit = "0.28.7"
 instant = "0.1.13"
 env_logger = "0.11.8"
 screenshots = "0.8.10"
+egui = "0.32.3"
+eframe = "0.32.3"
 
 # Python integration
 pyo3 = { version = "0.25.1", features = ["auto-initialize"] }
@@ -54,7 +57,7 @@ numpy = "0.25.0"
 # macOS specific
 objc2 = "0.6.2"
 objc2-foundation = { version = "0.3.1", features = ["NSString", "NSArray", "NSURL", "NSAutoreleasePool", "NSObject"] }
-objc2-app-kit = { version = "0.3.1", features = ["NSWorkspace", "NSRunningApplication"] }
+objc2-app-kit = { version = "0.3.1", features = ["NSWorkspace", "NSRunningApplication", "NSWindow", "NSView", "NSApplication"] }
 objc2-accessibility = { version = "0.3.1", features = ["AXFoundation"] }
 objc2-core-foundation = { version = "0.3.1", features = ["CFString", "objc2"] }
 

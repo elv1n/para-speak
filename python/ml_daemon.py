@@ -28,17 +28,16 @@ class MLDaemon:
     def load_model(self, model_name: str):
         """Load model by full name. No defaults or special cases."""
         try:
-            # Create and load model using factory
             self.model = create_model(model_name, verbose=False)
+
             self.model.load_model()
             self.model_type = model_name
-            
-            # Get device info from model
+
             device_info = self.model.get_device_info()
             logging.info(f"Model loaded on device: {device_info}")
-            
+
             return f"Loaded: {model_name}"
-                
+
         except Exception as e:
             raise RuntimeError(f"Model loading failed: {str(e)}")
     

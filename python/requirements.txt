@@ -1,17 +1,6 @@
-# Core dependencies - latest stable versions
-numpy>=2.1.0,<3.0.0  # Use 2.x for better compatibility with PyTorch
+# Para-Speak Python Dependencies
+# This file imports the modular requirements
+# Includes all model dependencies to avoid reinstalling when switching models
 
-# PyTorch for Apple Silicon - latest stable
---extra-index-url https://download.pytorch.org/whl/cpu
-torch>=2.8.0
-torchaudio>=2.8.0
-
-# Audio processing - latest
-soundfile>=0.13.1
-
-# Apple Silicon ML acceleration - latest versions
-mlx>=0.28.0
-parakeet-mlx>=0.3.6
-
-# Audio processing utilities
-librosa>=0.10.2
+-r requirements/parakeet.txt
+-r requirements/canary.txt

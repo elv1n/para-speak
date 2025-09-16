@@ -1,0 +1,19 @@
+# Canary model dependencies
+# Import base requirements
+-r base.txt
+
+# NVIDIA NeMo toolkit for ASR
+nemo-toolkit[asr]>=1.23.0
+
+# Additional dependencies for NeMo
+hydra-core>=1.3.2
+omegaconf>=2.3.0
+pytorch-lightning>=2.0.0
+
+# Tokenizers and text processing
+sentencepiece>=0.2.0
+youtokentome>=1.0.6
+
+# Optional: For faster inference
+onnx>=1.15.0
+onnxruntime>=1.16.0

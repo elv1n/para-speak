@@ -1,12 +1,13 @@
 use crate::registry::{create_default_registry, ComponentRegistry};
 use audio::{play_error_sound, AudioRecorder};
 use config::Config;
+use indicatif::{ProgressBar, ProgressStyle};
 use ml_core::TranscriptionService;
 use shortcut_matcher::ShortcutAction;
 use shortcut_matcher::ShortcutHandler;
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 pub struct Controllers {
     audio: Arc<Mutex<AudioRecorder>>,
@@ -20,11 +21,28 @@ impl Controllers {
             .build()
             .map_err(|e| anyhow::anyhow!("Failed to build component registry: {}", e))?;
 
+        let config = Config::global();
+        let model_type = config.model_name();
+
+        let pb = ProgressBar::new_spinner();
+        pb.set_style(
+            ProgressStyle::default_spinner()
+                .template("{spinner:.green} {msg}")
+                .unwrap(),
+        );
+        pb.set_message(format!("Loading model {}...", model_type));
+        pb.enable_steady_tick(Duration::from_millis(100));
+
         let model_init_start = Instant::now();
         let model_name = TranscriptionService::global()
             .load_model(None)
-            .map_err(|e| anyhow::anyhow!("{}", e))?;
+            .map_err(|e| {
+                pb.finish_and_clear();
+                anyhow::anyhow!("{}", e)
+            })?;
         let model_init_duration = model_init_start.elapsed();
+
+        pb.finish_with_message(format!("✅ Model {} loaded in {:.2}s", model_name, model_init_duration.as_secs_f32()));
 
         log::info!(
             "Model {} initialized in {:.2}s",

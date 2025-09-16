@@ -1,5 +1,12 @@
 # Changelog
 
+## 2025-09-16
+
+### Features
+- Multiple model support - ability to switch between different ML models
+- Experimental Canary model support (nvidia/canary-1b-v2) added
+- Initial UI crate foundation (in design phase)
+
 ## 2025-09-13
 
 ### Features

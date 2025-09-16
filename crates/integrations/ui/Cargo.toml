@@ -1,0 +1,22 @@
+[package]
+name = "ui"
+version = "1.0.0"
+edition = "2021"
+license.workspace = true
+
+[[bin]]
+name = "ui-demo"
+path = "src/main.rs"
+
+[dependencies]
+egui = { workspace = true }
+eframe = { workspace = true }
+env_logger = { workspace = true }
+log = { workspace = true }
+raw-window-handle = "0.6"
+
+# macOS specific dependencies
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = { workspace = true }
+objc2-app-kit = { workspace = true }
+objc2-foundation = { workspace = true }
