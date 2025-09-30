@@ -1,12 +1,13 @@
 use aho_corasick::{AhoCorasickBuilder, MatchKind};
 use config::Config;
+use para_log::debug;
 use std::collections::HashMap;
 use std::sync::Arc;
 
 pub fn handle_transcribed_text(text: String, config: Arc<Config>) -> String {
     let trimmed = text.trim().to_string();
     if trimmed.is_empty() || trimmed.len() < 3 {
-        log::debug!("[ML] Empty transcription");
+        debug!("[ML] Empty transcription");
         return String::new();
     }
 

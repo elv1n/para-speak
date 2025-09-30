@@ -73,12 +73,13 @@ impl Controllers {
     }
 
     pub fn handle_stop(&self) -> anyhow::Result<()> {
-        let audio_data = {
+        let (audio_samples, sample_rate) = {
             let audio = self
                 .audio
                 .lock()
                 .map_err(|e| anyhow::anyhow!("Failed to lock audio: {}", e))?;
-            audio.stop_recording()?.samples
+            let data = audio.stop_recording()?;
+            (data.samples, data.sample_rate)
         };
 
         let _ = self.registry.notify_stop();
@@ -86,7 +87,7 @@ impl Controllers {
         let registry = self.registry.clone();
 
         thread::spawn(move || {
-            Self::process_transcription(audio_data, registry);
+            Self::process_transcription(audio_samples, sample_rate, registry);
         });
 
         Ok(())
@@ -111,7 +112,7 @@ impl Controllers {
         };
 
         if Config::global().transcribe_on_pause {
-            self.process_partial_transcription(audio_data.samples)?;
+            self.process_partial_transcription(audio_data.samples, audio_data.sample_rate)?;
         }
 
         let _ = self.registry.notify_pause();
@@ -175,10 +176,10 @@ impl Controllers {
         Ok(())
     }
 
-    fn process_transcription(audio_data: Arc<Vec<u8>>, registry: Arc<ComponentRegistry>) {
+    fn process_transcription(audio_data: Arc<Vec<u8>>, sample_rate: u32, registry: Arc<ComponentRegistry>) {
         let _ = registry.notify_processing_start();
 
-        match TranscriptionService::global().transcribe(&audio_data) {
+        match TranscriptionService::global().transcribe(&audio_data, sample_rate) {
             Ok(text) => {
                 let _ = registry.notify_processing_complete(&text);
             }
@@ -189,7 +190,7 @@ impl Controllers {
         }
     }
 
-    pub fn process_partial_transcription(&self, audio_data: Arc<Vec<u8>>) -> anyhow::Result<()> {
+    pub fn process_partial_transcription(&self, audio_data: Arc<Vec<u8>>, sample_rate: u32) -> anyhow::Result<()> {
         if !Config::global().transcribe_on_pause {
             return Ok(());
         }
@@ -199,7 +200,7 @@ impl Controllers {
         thread::spawn(move || {
             let _ = registry.notify_partial_processing_start();
 
-            match TranscriptionService::global().transcribe(&audio_data) {
+            match TranscriptionService::global().transcribe(&audio_data, sample_rate) {
                 Ok(text) => {
                     let _ = registry.notify_partial_processing_complete(&text);
                 }

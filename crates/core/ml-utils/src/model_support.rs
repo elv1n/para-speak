@@ -27,6 +27,14 @@ const CANARY_REQUIRED_FILES: &[&str] = &[
     "canary-1b-v2.nemo",
 ];
 
+const PARAKEET_ONNX_REQUIRED_FILES: &[&str] = &[
+    "encoder-model.onnx",
+    "encoder-model.onnx.data",
+    "decoder_joint-model.onnx",
+    "nemo128.onnx",
+    "vocab.txt",
+];
+
 const PARAKEET_TDT_0_6B_V3_SIZES: &[(&str, u64)] = &[
     ("config.json", 244093),
     ("model.safetensors", 2508288736),
@@ -59,6 +67,14 @@ const CANARY_1B_V2_SIZES: &[(&str, u64)] = &[
     ("canary-1b-v2.nemo", 6358958080),
 ];
 
+const PARAKEET_ONNX_0_6B_V3_SIZES: &[(&str, u64)] = &[
+    ("encoder-model.onnx", 41_770_866),
+    ("encoder-model.onnx.data", 2_435_420_160),
+    ("decoder_joint-model.onnx", 72_520_893),
+    ("nemo128.onnx", 139_764),
+    ("vocab.txt", 93_939),
+];
+
 pub const AVAILABLE_MODELS: &[ModelInfo] = &[
     ModelInfo {
         name: "mlx-community/parakeet-tdt-0.6b-v3",
@@ -89,6 +105,12 @@ pub const AVAILABLE_MODELS: &[ModelInfo] = &[
         profile: "canary",
         required_files: CANARY_REQUIRED_FILES,
         file_sizes: CANARY_1B_V2_SIZES,
+    },
+    ModelInfo {
+        name: "istupakov/parakeet-tdt-0.6b-v3-onnx",
+        profile: "parakeet-onnx",
+        required_files: PARAKEET_ONNX_REQUIRED_FILES,
+        file_sizes: PARAKEET_ONNX_0_6B_V3_SIZES,
     },
 ];
 
@@ -169,6 +191,10 @@ pub fn get_model_profile(model_name: &str) -> Result<&'static str, String> {
 
 pub fn verify_python_requirements(model_name: &str) -> Result<(), String> {
     let expected_profile = get_model_profile(model_name)?;
+
+    if expected_profile == "parakeet-onnx" {
+        return Ok(());
+    }
 
     let project_root = std::env::current_dir()
         .map_err(|e| format!("Failed to get current directory: {}", e))?;

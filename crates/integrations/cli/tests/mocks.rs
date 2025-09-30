@@ -108,7 +108,7 @@ impl MockTranscriptionService {
         }
     }
 
-    pub fn transcribe(&self, _audio_data: &[u8]) -> anyhow::Result<String> {
+    pub fn transcribe(&self, _audio_data: &[u8], _sample_rate: u32) -> anyhow::Result<String> {
         self.transcribe_count.fetch_add(1, Ordering::SeqCst);
         let text = format!(
             "Transcribed text {}",
@@ -269,7 +269,7 @@ impl MockController {
         std::thread::spawn(move || {
             let _ = registry.notify_processing_start();
 
-            if let Ok(text) = transcription.transcribe(&audio_data.samples) {
+            if let Ok(text) = transcription.transcribe(&audio_data.samples, audio_data.sample_rate) {
                 let _ = registry.notify_processing_complete(&text);
             }
         });

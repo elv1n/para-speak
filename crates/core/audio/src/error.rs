@@ -52,6 +52,9 @@ pub enum AudioError {
 
     #[error("Thread communication failed")]
     ThreadCommunicationFailed,
+
+    #[error("Audio resampling error: {0}")]
+    ResamplingError(String),
 }
 
 pub type Result<T> = std::result::Result<T, AudioError>;

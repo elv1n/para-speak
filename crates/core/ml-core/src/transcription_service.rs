@@ -1,5 +1,7 @@
-use crate::{ml_engine::MLEngine, ml_error::Result, text_manipulation::handle_transcribed_text};
+use crate::ml_engine_native::MLEngine;
+use crate::{ml_error::Result, text_manipulation::handle_transcribed_text};
 use config::Config;
+use para_log::{debug, error, info, warn};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Instant;
 
@@ -21,7 +23,7 @@ impl TranscriptionService {
             .get_or_init(|| {
                 let service = Self::new();
                 if let Err(e) = service.initialize() {
-                    log::warn!("Failed to initialize ML engine: {}", e);
+                    warn!("Failed to initialize ML engine: {}", e);
                 }
                 Arc::new(service)
             })
@@ -33,11 +35,22 @@ impl TranscriptionService {
         engine.initialize()
     }
 
-    pub fn transcribe(&self, audio_data: &[u8]) -> Result<String> {
+    pub fn transcribe(&self, audio_data: &[u8], sample_rate: u32) -> Result<String> {
+        let audio_for_ml = if sample_rate != crate::ML_SAMPLE_RATE {
+            debug!(
+                "Resampling audio from {}Hz to {}Hz for ML model",
+                sample_rate,
+                crate::ML_SAMPLE_RATE
+            );
+            audio::resample_audio(audio_data, sample_rate, crate::ML_SAMPLE_RATE)?
+        } else {
+            audio_data.to_vec()
+        };
+
         let start_time = Instant::now();
         let result = {
-            let engine = self.engine.lock()?;
-            engine.transcribe(audio_data)
+            let mut engine = self.engine.lock()?;
+            engine.transcribe(&audio_for_ml)
         };
         let elapsed = start_time.elapsed();
 
@@ -47,8 +60,8 @@ impl TranscriptionService {
                 if processed.is_empty() {
                     return Ok(String::new());
                 }
-                log::debug!("[ML] Transcription successful: {}", processed);
-                log::info!(
+                debug!("[ML] Transcription successful: {}", processed);
+                info!(
                     "[ML] Transcription completed in {:.2}s, {} chars returned",
                     elapsed.as_secs_f32(),
                     processed.len()
@@ -56,7 +69,7 @@ impl TranscriptionService {
                 Ok(processed)
             }
             Err(e) => {
-                log::error!(
+                error!(
                     "[ML] Transcription failed after {:.2}s: {}",
                     elapsed.as_secs_f32(),
                     e
@@ -87,7 +100,7 @@ impl TranscriptionService {
     pub fn shutdown_model(&self) -> Result<()> {
         let mut engine = self.engine.lock()?;
         engine.unload_model()?;
-        log::info!("[ML] Model shutdown complete");
+        info!("[ML] Model shutdown complete");
         Ok(())
     }
 }

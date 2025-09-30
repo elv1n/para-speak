@@ -1,6 +1,0 @@
-# Para-Speak Python Dependencies
-# This file imports the modular requirements
-# Includes all model dependencies to avoid reinstalling when switching models
-
--r requirements/parakeet.txt
--r requirements/canary.txt

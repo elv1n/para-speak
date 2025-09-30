@@ -1,8 +1,13 @@
 use config::Config;
-use para_speak_cli::{panic_handler, ParaSpeakApp};
-use ml_utils::{verify_python_requirements, verify_model_files};
+use ort::environment::get_environment;
+use ort::logging::LogLevel;
+use para_speak_cli::{model_verification::ModelVerification, panic_handler, ParaSpeakApp};
 
 fn main() {
+    let _ = ort::init()
+        .commit()
+        .and_then(|_| get_environment().map(|env| env.set_log_level(LogLevel::Fatal)));
+
     let config = Config::initialize();
 
     panic_handler::setup_full_backtrace_for_dev();
@@ -12,21 +17,16 @@ fn main() {
 
     log::info!("Configuration: {:?}", config);
 
-    if let Err(e) = verify_python_requirements(config.model_name()) {
-        eprintln!("\n❌ Python requirements verification failed\n");
-        eprintln!("{}", e);
-        eprintln!("\nPlease run the following command to fix this:");
-        eprintln!("  cargo run -p verify-cli\n");
-        eprintln!("This will update your Python environment to match the selected model.");
-        std::process::exit(1);
-    }
+    let verifier = match ModelVerification::new(config.model_name().to_string()) {
+        Ok(v) => v,
+        Err(e) => {
+            eprintln!("\n❌ Failed to initialize model verification: {}\n", e);
+            std::process::exit(1);
+        }
+    };
 
-    if let Err(e) = verify_model_files(config.model_name()) {
-        eprintln!("\n❌ Model verification failed\n");
-        eprintln!("{}", e);
-        eprintln!("\nPlease run the following command to download/fix the model:");
-        eprintln!("  cargo run -p verify-cli\n");
-        eprintln!("This will download or repair the required model files.");
+    if let Err(e) = verifier.verify_or_download() {
+        eprintln!("\n❌ Model verification/download failed: {}\n", e);
         std::process::exit(1);
     }
 
@@ -38,17 +38,10 @@ fn main() {
             .collect::<Vec<_>>()
             .join(": ");
 
-        if error_chain.contains("Model not found") {
-            eprintln!("\n❌ Model not found\n");
-            eprintln!("Please download the model first by running:");
-            eprintln!("  cargo run -p verify-cli\n");
-            std::process::exit(1);
-        } else {
-            eprintln!("\n❌ Error: {}\n", error_chain);
-            if config.debug {
-                eprintln!("Debug backtrace:\n{:?}", e);
-            }
-            std::process::exit(1);
+        eprintln!("\n❌ Error: {}\n", error_chain);
+        if config.debug {
+            eprintln!("Debug backtrace:\n{:?}", e);
         }
+        std::process::exit(1);
     }
 }

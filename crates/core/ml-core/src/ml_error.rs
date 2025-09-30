@@ -5,9 +5,6 @@ pub enum TranscriptionError {
     #[error("Transcription engine not initialized")]
     NotInitialized,
 
-    #[error("Python error: {0}")]
-    PythonError(String),
-
     #[error("Model not loaded")]
     ModelNotLoaded,
 
@@ -35,14 +32,14 @@ pub enum TranscriptionError {
 
 pub type Result<T> = std::result::Result<T, TranscriptionError>;
 
-impl From<pyo3::PyErr> for TranscriptionError {
-    fn from(err: pyo3::PyErr) -> Self {
-        TranscriptionError::PythonError(err.to_string())
-    }
-}
-
 impl<T> From<std::sync::PoisonError<T>> for TranscriptionError {
     fn from(err: std::sync::PoisonError<T>) -> Self {
         TranscriptionError::LockError(err.to_string())
+    }
+}
+
+impl From<audio::AudioError> for TranscriptionError {
+    fn from(err: audio::AudioError) -> Self {
+        TranscriptionError::InvalidAudioFormat(err.to_string())
     }
 }

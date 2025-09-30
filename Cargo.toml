@@ -12,7 +12,6 @@ members = [
     "crates/integrations/focus-detector",
     "crates/integrations/shortcut-listener",
     "crates/integrations/cli",
-    "crates/integrations/verify-cli",
     "crates/integrations/ui",
 ]
 resolver = "2"
@@ -33,6 +32,7 @@ arboard = "3.6.1"
 # Audio
 cpal = "0.16.0"
 hound = "3.5.1"
+rubato = "0.16.0"
 
 # Concurrency
 crossbeam-channel = "0.5.15"
@@ -49,10 +49,6 @@ env_logger = "0.11.8"
 screenshots = "0.8.10"
 egui = "0.32.3"
 eframe = "0.32.3"
-
-# Python integration
-pyo3 = { version = "0.25.1", features = ["auto-initialize"] }
-numpy = "0.25.0"
 
 # macOS specific
 objc2 = "0.6.2"

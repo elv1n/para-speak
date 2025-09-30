@@ -10,8 +10,9 @@ pub struct DynamicBuffer {
 impl DynamicBuffer {
     pub fn new() -> Self {
         let config = Config::global();
-        let initial_capacity = config.sample_rate as usize * 2 * config.initial_buffer_seconds as usize;
-        let growth_increment = config.sample_rate as usize * 2 * 15;
+        const RECORDING_SAMPLE_RATE: usize = 48000;
+        let initial_capacity = RECORDING_SAMPLE_RATE * 2 * config.initial_buffer_seconds as usize;
+        let growth_increment = RECORDING_SAMPLE_RATE * 2 * 15;
         
         Self {
             buffer: Vec::with_capacity(initial_capacity),

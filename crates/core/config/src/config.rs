@@ -110,9 +110,6 @@ pub struct Config {
     pub memory_monitor: bool,
 
     #[arg(skip)]
-    pub sample_rate: u32,
-
-    #[arg(skip)]
     pub initial_buffer_seconds: u32,
 
     #[arg(skip)]
@@ -145,7 +142,6 @@ impl Config {
         let _ = dotenv::from_filename(".env.local");
 
         let mut config = Config::parse();
-        config.sample_rate = 48000;
         config.initial_buffer_seconds = 15;
 
         if config.shortcut_resolution_delay_ms.is_none() {
@@ -193,7 +189,6 @@ impl Config {
             transcribe_on_pause: false,
             shortcut_resolution_delay_ms: Some(50),
             memory_monitor: false,
-            sample_rate: 48000,
             initial_buffer_seconds: 15,
             transcription_replace_text: HashMap::new(),
             model: Some(get_default_model()),
@@ -333,13 +328,12 @@ mod tests {
             transcribe_on_pause: false,
             shortcut_resolution_delay_ms: None,
             memory_monitor: false,
-            sample_rate: 48000,
             initial_buffer_seconds: 15,
             transcription_replace_text: HashMap::new(),
             model: Some(get_default_model()),
             force: false,
         };
-        
+
         if config.start_keys.is_empty() {
             config.start_keys = vec!["double(ControlLeft, 300)".to_string()];
         }

@@ -112,8 +112,7 @@ impl ParaSpeakApp {
         thread::sleep(Duration::from_millis(100));
 
         info!("Process termination");
-        // Return cleanly to allow destructors and shutdown hooks to run
-        Ok(())
+        std::process::exit(0);
     }
 
     fn setup_signal_handlers(event_tx: mpsc::Sender<MainEvent>) -> Result<()> {

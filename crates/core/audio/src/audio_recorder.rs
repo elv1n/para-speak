@@ -1,7 +1,6 @@
 use crate::conversion::convert_audio_data;
 use crate::dynamic_buffer::DynamicBuffer;
 use crate::error::{AudioError, Result};
-use config::Config;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{Device, SampleFormat, Stream, StreamConfig};
 use crossbeam_channel::{bounded, Receiver, Sender};
@@ -285,7 +284,6 @@ fn run_audio_thread(
     response_tx: Sender<Response>,
     shared_state: SharedState,
 ) -> Result<()> {
-    let config = Config::global();
     let host = cpal::default_host();
     let device = host
         .default_input_device()
@@ -293,12 +291,14 @@ fn run_audio_thread(
 
     let default_config = device.default_input_config()?;
     let stream_config = StreamConfig {
-        channels: 1, // Force mono
-        sample_rate: cpal::SampleRate(config.sample_rate),
+        channels: 1,
+        sample_rate: default_config.sample_rate(),
         buffer_size: cpal::BufferSize::Default,
     };
 
     let mut state = InternalState::new();
+
+    let recording_sample_rate = stream_config.sample_rate.0;
 
     while let Ok(cmd) = command_rx.recv() {
         match handle_command(
@@ -307,6 +307,7 @@ fn run_audio_thread(
             &stream_config,
             default_config.sample_format(),
             &shared_state,
+            recording_sample_rate,
         ) {
             Ok(Some(response)) => {
                 if response_tx.send(response).is_err() {
@@ -331,8 +332,8 @@ fn handle_command(
     stream_config: &StreamConfig,
     sample_format: SampleFormat,
     shared_state: &SharedState,
+    recording_sample_rate: u32,
 ) -> Result<Option<Response>> {
-    let config = Config::global();
     match cmd {
         Command::StartRecording => {
             if state.stream.is_some() {
@@ -380,7 +381,7 @@ fn handle_command(
             log::debug!(
                 "Stopping recording, total audio: {} bytes ({:.2} seconds)",
                 all_samples.len(),
-                all_samples.len() as f64 / (config.sample_rate as f64 * 2.0)
+                all_samples.len() as f64 / (recording_sample_rate as f64 * 2.0)
             );
 
             let duration_ms = state
@@ -400,7 +401,7 @@ fn handle_command(
 
             let audio_data = AudioData {
                 samples: Arc::new(all_samples),
-                sample_rate: config.sample_rate,
+                sample_rate: recording_sample_rate,
                 channels: 1,
                 duration_ms,
             };
@@ -435,7 +436,7 @@ fn handle_command(
 
             let audio_data = AudioData {
                 samples: Arc::new(current_data),
-                sample_rate: config.sample_rate,
+                sample_rate: recording_sample_rate,
                 channels: 1,
                 duration_ms,
             };

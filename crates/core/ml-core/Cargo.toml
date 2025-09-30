@@ -7,12 +7,9 @@ license.workspace = true
 [dependencies]
 config = { path = "../config" }
 ml-utils = { path = "../ml-utils" }
+audio = { path = "../audio" }
 aho-corasick = "1.1"
-pyo3 = { workspace = true }
-numpy = { workspace = true }
 thiserror = { workspace = true }
-log = { workspace = true }
-
-
-[build-dependencies]
-pyo3-build-config = "0.25.1"
+para-log = { path = "../log", package = "log" }
+transcribe-rs = { version = "0.1.0" }
+hound = { workspace = true }

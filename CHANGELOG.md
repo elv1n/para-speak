@@ -1,5 +1,12 @@
 # Changelog
 
+## 2025-09-29
+
+### Major Refactoring
+- Migrated from Python to native Rust ML backend
+- Simplified setup process - models download automatically on first run
+- Integrated model verification into main CLI (removed separate verify-cli crate)
+
 ## 2025-09-16
 
 ### Features

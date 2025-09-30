@@ -23,6 +23,8 @@ shortcut-matcher = { path = "../../core/shortcut-matcher" }
 
 # CLI and configuration dependencies are now in core/config
 
+# ML dependencies
+ort = { version = "2.0.0-rc.10" }
 
 # Logging
 log = { path = "../../core/log" }
@@ -33,6 +35,9 @@ thiserror = "2.0"
 
 # Progress indicators
 indicatif = "0.18"
+
+# Network
+reqwest = { version = "0.12", features = ["blocking"] }
 
 # System interaction
 sysinfo = "0.32"
@@ -55,9 +60,6 @@ serde_json = { workspace = true }
 
 # Audio
 hound = { workspace = true }
-
-# Python integration
-pyo3 = { workspace = true }
 
 [dev-dependencies]
 tempfile = "3"

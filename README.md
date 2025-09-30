@@ -1,21 +1,19 @@
 # Para-Speak
 
-Local speech-to-text CLI tool powered by NVIDIA Parakeet model. Minimal idle footprint, powerful customizable shortcuts, audio feedback, and extensible controller API for custom integrations.
+Local speech-to-text CLI tool powered by native ML inference with support for NVIDIA Parakeet and Canary models. Minimal idle footprint, powerful customizable shortcuts, audio feedback, and extensible controller API for custom integrations.
 
- Built in Rust for speed and minimal resource usage, it integrates Python ML models (Parakeet MLX) optimized for Apple Silicon.
+Built in Rust with native ML backend for maximum speed and minimal resource usage.
 
 **Note**: Para-speak is in its early stages and available on macOS only. Many decisions are still being made, and it will mature over time.
 
 ## Quick Start
 
 ```bash
-# 1. Set up environment and download model (first time only)
-cargo run -p verify-cli
+# Run Para-speak (downloads model automatically on first run):
+cargo run -p para-speak-cli
 
-# 2. Run Para-speak:
+# Or use the shell script:
 ./para-speak
-
-# Note: Direct `cargo run -p para-speak-cli` requires PYO3_PYTHON env var
 ```
 
 ## Features
@@ -139,17 +137,18 @@ The [Spotify controller](https://github.com/elv1n/para-speak/tree/main/crates/in
 ## Architecture
 
 ```
-┌─────────────────┐         ┌──────────────────┐
-│   Rust Core     │  PyO3   │  Python ML       │
-├─────────────────┤◄───────►├──────────────────┤
-│ • Audio capture │         │ • Parakeet MLX   │
-│ • Shortcuts     │         │ • Model loading  │
-│ • System APIs   │         │ • Transcription  │
-│ • Components    │         │                  │
-└─────────────────┘         └──────────────────┘
+┌──────────────────────────────────────┐
+│           Para-Speak                 │
+├──────────────────────────────────────┤
+│ • Native ML inference (ONNX/NeMo)   │
+│ • Audio capture & resampling         │
+│ • Global keyboard shortcuts          │
+│ • System APIs & integrations         │
+│ • Component controllers              │
+└──────────────────────────────────────┘
 ```
 
-The Rust core handles all system integration and performance-critical paths, while Python handles ML inference using MLX framework optimized for Apple Silicon.
+Pure Rust implementation with native ML inference using ONNX Runtime and NeMo for maximum performance and minimal resource usage.
 
 ## Platform Support
 
@@ -160,11 +159,9 @@ Para-speak is designed to be cross-platform with support for multiple models in 
 - **Microphone**: For audio capture
 - **Accessibility**: For global keyboard shortcuts to work system-wide
 
-## Verify CLI
+## Model Management
 
-Tool for managing ML models:
-- `cargo run -p verify-cli` - Download and verify ML models
-- `cargo run -p verify-cli list` - List downloaded models with sizes
+Para-speak automatically downloads models on first run. Models are cached in the `models/` directory and reused across runs.
 
 ## License
 
