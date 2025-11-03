@@ -10,5 +10,7 @@ audio = { path = "../../core/audio" }
 clipboard = { path = "../../core/clipboard" }
 config = { path = "../../core/config" }
 focus-detector = { path = "../focus-detector" }
+indicatif = "0.17"
 log = { path = "../../core/log" }
+ml-core = { path = "../../core/ml-core" }
 thiserror = "2.0"

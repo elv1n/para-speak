@@ -35,6 +35,12 @@ pub struct Config {
     )]
     pub paste: bool,
 
+    #[arg(
+        long,
+        env = "PARA_REALTIME",
+        help = "Enable real-time transcription mode with streaming output"
+    )]
+    pub realtime: bool,
 
     #[arg(
         long = "spotify-recording-volume",
@@ -184,6 +190,7 @@ impl Config {
         Config {
             debug: false,
             paste: false,
+            realtime: false,
             spotify_recording_volume: None,
             spotify_reduce_by: None,
             start_keys,
@@ -324,6 +331,7 @@ mod tests {
         let mut config = Config {
             debug: false,
             paste: false,
+            realtime: false,
             spotify_recording_volume: None,
             spotify_reduce_by: None,
             start_keys: vec![],

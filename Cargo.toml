@@ -36,6 +36,7 @@ hound = "3.5.1"
 
 # Concurrency
 crossbeam-channel = "0.5.15"
+ringbuf = "0.4.7"
 parking_lot = "0.12.1"
 
 # Error handling

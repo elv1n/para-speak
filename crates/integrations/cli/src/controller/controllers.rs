@@ -16,7 +16,12 @@ pub struct Controllers {
 
 impl Controllers {
     pub fn new() -> anyhow::Result<Self> {
-        let registry = create_default_registry()
+        let config = Config::global();
+
+        let ring_buffer = Arc::new(audio::RingBuffer::new(10, config.sample_rate));
+        let audio = Arc::new(Mutex::new(audio::AudioRecorder::with_realtime_ring(Some(ring_buffer.clone()))));
+
+        let registry = create_default_registry(ring_buffer)
             .map_err(|e| anyhow::anyhow!("Failed to create component registry: {}", e))?
             .build()
             .map_err(|e| anyhow::anyhow!("Failed to build component registry: {}", e))?;
@@ -51,7 +56,7 @@ impl Controllers {
         );
 
         Ok(Self {
-            audio: Arc::new(Mutex::new(AudioRecorder::new())),
+            audio,
             registry,
         })
     }

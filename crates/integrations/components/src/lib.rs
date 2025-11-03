@@ -1,14 +1,18 @@
 pub mod audio;
 pub mod focus_detector;
 pub mod overlay;
+pub mod smart_collector;
 pub mod spotify;
 pub mod transcription_handler;
+pub mod transcription_observer;
 
 pub use audio::AudioComponent;
 pub use focus_detector::FocusDetectorComponent;
 pub use overlay::OverlayComponent;
+pub use smart_collector::SmartCollector;
 pub use spotify::SpotifyComponent;
 pub use transcription_handler::TranscriptionHandler;
+pub use transcription_observer::TranscriptionObserver;
 
 use anyhow::Result;
 use std::any::{Any, TypeId};

@@ -524,6 +524,7 @@ dependencies = [
  "crossbeam-channel",
  "hound",
  "log 0.1.0",
+ "ringbuf",
  "thiserror 2.0.16",
 ]
 
@@ -887,7 +888,9 @@ dependencies = [
  "clipboard",
  "config",
  "focus-detector",
+ "indicatif 0.17.11",
  "log 0.1.0",
+ "ml-core",
  "thiserror 2.0.16",
 ]
 
@@ -908,6 +911,19 @@ dependencies = [
  "dotenv",
  "log 0.1.0",
  "ml-utils",
+]
+
+[[package]]
+name = "console"
+version = "0.15.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "054ccb5b10f9f2cbf51eb355ca1d05c2d279ce1804688d0db74b4733a5aeafd8"
+dependencies = [
+ "encode_unicode",
+ "libc",
+ "once_cell",
+ "unicode-width",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -1877,7 +1893,7 @@ dependencies = [
  "log 0.4.27",
  "presser",
  "thiserror 1.0.69",
- "windows 0.57.0",
+ "windows 0.58.0",
 ]
 
 [[package]]
@@ -2251,11 +2267,24 @@ dependencies = [
 
 [[package]]
 name = "indicatif"
+version = "0.17.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "183b3088984b400f4cfac3620d5e076c84da5364016b4f49473de574b2586235"
+dependencies = [
+ "console 0.15.11",
+ "number_prefix",
+ "portable-atomic",
+ "unicode-width",
+ "web-time",
+]
+
+[[package]]
+name = "indicatif"
 version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "70a646d946d06bedbbc4cac4c218acf4bbf2d87757a784857025f4d447e4e1cd"
 dependencies = [
- "console",
+ "console 0.16.0",
  "portable-atomic",
  "unicode-width",
  "unit-prefix",
@@ -2837,6 +2866,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "number_prefix"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "830b246a0e5f20af87141b25c173cd1b609bd7779a4617d6ec582abaf90870f3"
+
+[[package]]
 name = "numpy"
 version = "0.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3361,7 +3396,7 @@ dependencies = [
  "dashmap",
  "focus-detector",
  "hound",
- "indicatif",
+ "indicatif 0.18.0",
  "libc",
  "log 0.1.0",
  "memory-stats",
@@ -3863,6 +3898,17 @@ dependencies = [
  "libc",
  "untrusted",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "ringbuf"
+version = "0.4.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fe47b720588c8702e34b5979cb3271a8b1842c7cb6f57408efa70c779363488c"
+dependencies = [
+ "crossbeam-utils",
+ "portable-atomic",
+ "portable-atomic-util",
 ]
 
 [[package]]
@@ -4828,7 +4874,7 @@ dependencies = [
  "clap",
  "dotenv",
  "futures-util",
- "indicatif",
+ "indicatif 0.18.0",
  "ml-core",
  "ml-utils",
  "reqwest",

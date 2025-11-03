@@ -1,5 +1,10 @@
 # Changelog
 
+## 2025-11-03
+
+### Features
+- Add experimental real-time transcription mode with continuous speech-to-text processing during recording
+
 ## 2025-09-16
 
 ### Features

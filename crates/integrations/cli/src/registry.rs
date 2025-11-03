@@ -12,9 +12,12 @@ pub struct ComponentRegistry {
     components_by_name: DashMap<String, ComponentRef>,
 }
 
-pub fn create_default_registry() -> Result<RegistryBuilder> {
+pub fn create_default_registry(
+    realtime_ring: std::sync::Arc<audio::RingBuffer>,
+) -> Result<RegistryBuilder> {
     use components::{
-        AudioComponent, FocusDetectorComponent, SpotifyComponent, TranscriptionHandler,
+        AudioComponent, FocusDetectorComponent, TranscriptionObserver,
+        SpotifyComponent, TranscriptionHandler,
     };
 
     info!("Creating default component registry");
@@ -23,7 +26,8 @@ pub fn create_default_registry() -> Result<RegistryBuilder> {
         .register_component(AudioComponent::new())?
         .register_component(SpotifyComponent::new())?
         .register_component(TranscriptionHandler::new())?
-        .register_component(FocusDetectorComponent::new())?;
+        .register_component(FocusDetectorComponent::new())?
+        .register_component(TranscriptionObserver::new(realtime_ring))?;
 
     info!(
         "Registry initialized with {} components",

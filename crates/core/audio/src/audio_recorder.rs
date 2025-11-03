@@ -1,6 +1,7 @@
 use crate::conversion::convert_audio_data;
 use crate::dynamic_buffer::DynamicBuffer;
 use crate::error::{AudioError, Result};
+use crate::ring_buffer::RingBuffer;
 use config::Config;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{Device, SampleFormat, Stream, StreamConfig};
@@ -27,6 +28,7 @@ enum Command {
     StopRecording,
     PauseRecording,
     ResumeRecording,
+    GetBufferSnapshot,
     Shutdown,
 }
 
@@ -35,22 +37,25 @@ enum Response {
     Stopped(AudioData),
     Paused(AudioData),
     Resumed,
+    BufferSnapshot(Vec<u8>),
     Error(AudioError),
 }
 
 struct InternalState {
     stream: Option<Stream>,
     buffer: Arc<Mutex<DynamicBuffer>>,
+    realtime_ring: Option<Arc<RingBuffer>>,
     start_time: Option<Instant>,
     segments: Vec<Vec<u8>>,
     is_paused: bool,
 }
 
 impl InternalState {
-    fn new() -> Self {
+    fn new(realtime_ring: Option<Arc<RingBuffer>>) -> Self {
         Self {
             stream: None,
             buffer: Arc::new(Mutex::new(DynamicBuffer::new())),
+            realtime_ring,
             start_time: None,
             segments: Vec::new(),
             is_paused: false,
@@ -63,18 +68,23 @@ fn create_stream(
     config: &StreamConfig,
     sample_format: SampleFormat,
     buffer: Arc<Mutex<DynamicBuffer>>,
+    realtime_ring: Option<Arc<RingBuffer>>,
 ) -> Result<Stream> {
     let channels = config.channels as usize;
 
     match sample_format {
         SampleFormat::I16 => {
             let buffer_clone = buffer.clone();
+            let ring_clone = realtime_ring.clone();
             let stream = device.build_input_stream(
                 config,
                 move |data: &[i16], _: &cpal::InputCallbackInfo| {
                     let mono_bytes = convert_audio_data(data, channels);
                     if let Ok(mut buffer) = buffer_clone.lock() {
                         buffer.write(&mono_bytes);
+                    }
+                    if let Some(ring) = &ring_clone {
+                        ring.write(&mono_bytes);
                     }
                 },
                 move |err| {
@@ -86,12 +96,16 @@ fn create_stream(
         }
         SampleFormat::F32 => {
             let buffer_clone = buffer.clone();
+            let ring_clone = realtime_ring.clone();
             let stream = device.build_input_stream(
                 config,
                 move |data: &[f32], _: &cpal::InputCallbackInfo| {
                     let mono_bytes = convert_audio_data(data, channels);
                     if let Ok(mut buffer) = buffer_clone.lock() {
                         buffer.write(&mono_bytes);
+                    }
+                    if let Some(ring) = &ring_clone {
+                        ring.write(&mono_bytes);
                     }
                 },
                 move |err| {
@@ -109,6 +123,7 @@ fn create_stream_with_retry(
     stream_config: &StreamConfig,
     sample_format: SampleFormat,
     buffer: Arc<Mutex<DynamicBuffer>>,
+    realtime_ring: Option<Arc<RingBuffer>>,
 ) -> Result<Stream> {
     const MAX_RETRIES: u8 = 1;
     let host = cpal::default_host();
@@ -118,7 +133,7 @@ fn create_stream_with_retry(
             .default_input_device()
             .ok_or(AudioError::NoInputDevice)?;
 
-        match create_stream(&device, stream_config, sample_format, buffer.clone()) {
+        match create_stream(&device, stream_config, sample_format, buffer.clone(), realtime_ring.clone()) {
             Ok(stream) => {
                 if attempt > 1 {
                     log::info!(
@@ -165,6 +180,10 @@ impl Default for AudioRecorder {
 
 impl AudioRecorder {
     pub fn new() -> Self {
+        Self::with_realtime_ring(None)
+    }
+
+    pub fn with_realtime_ring(realtime_ring: Option<Arc<RingBuffer>>) -> Self {
         let (command_tx, command_rx) = bounded::<Command>(10);
         let (response_tx, response_rx) = bounded::<Response>(10);
 
@@ -179,7 +198,7 @@ impl AudioRecorder {
         };
 
         let worker_thread = thread::spawn(move || {
-            if let Err(e) = run_audio_thread(command_rx, response_tx, shared_state_worker) {
+            if let Err(e) = run_audio_thread(command_rx, response_tx, shared_state_worker, realtime_ring) {
                 log::error!("Audio recorder thread failed: {}", e);
             }
         });
@@ -252,6 +271,19 @@ impl AudioRecorder {
         self.shared_state.is_paused.load(Ordering::Relaxed)
     }
 
+    pub fn get_buffer_snapshot(&self) -> Result<Vec<u8>> {
+        self.command_tx
+            .send(Command::GetBufferSnapshot)
+            .map_err(|_| AudioError::ThreadCommunicationFailed)?;
+
+        match self.response_rx.recv_timeout(Duration::from_secs(1)) {
+            Ok(Response::BufferSnapshot(data)) => Ok(data),
+            Ok(Response::Error(e)) => Err(e),
+            Ok(_) => Err(AudioError::StateError("Unexpected response".into())),
+            Err(_) => Err(AudioError::ThreadCommunicationFailed),
+        }
+    }
+
     pub fn shutdown(&mut self) -> Result<()> {
         if self.is_recording() {
             let _ = self.stop_recording();
@@ -284,6 +316,7 @@ fn run_audio_thread(
     command_rx: Receiver<Command>,
     response_tx: Sender<Response>,
     shared_state: SharedState,
+    realtime_ring: Option<Arc<RingBuffer>>,
 ) -> Result<()> {
     let config = Config::global();
     let host = cpal::default_host();
@@ -298,7 +331,7 @@ fn run_audio_thread(
         buffer_size: cpal::BufferSize::Default,
     };
 
-    let mut state = InternalState::new();
+    let mut state = InternalState::new(realtime_ring);
 
     while let Ok(cmd) = command_rx.recv() {
         match handle_command(
@@ -345,7 +378,7 @@ fn handle_command(
             log::debug!("Starting new recording, buffer cleared");
 
             let stream =
-                create_stream_with_retry(stream_config, sample_format, state.buffer.clone())?;
+                create_stream_with_retry(stream_config, sample_format, state.buffer.clone(), state.realtime_ring.clone())?;
             stream.play()?;
 
             state.stream = Some(stream);
@@ -450,7 +483,7 @@ fn handle_command(
             log::debug!("Resuming recording, continuing with same buffer");
 
             let stream =
-                create_stream_with_retry(stream_config, sample_format, state.buffer.clone())?;
+                create_stream_with_retry(stream_config, sample_format, state.buffer.clone(), state.realtime_ring.clone())?;
             stream.play()?;
 
             state.stream = Some(stream);
@@ -460,6 +493,14 @@ fn handle_command(
             shared_state.is_paused.store(false, Ordering::Relaxed);
 
             Ok(Some(Response::Resumed))
+        }
+        Command::GetBufferSnapshot => {
+            let data = if state.stream.is_some() {
+                state.buffer.lock().unwrap().get_data().to_vec()
+            } else {
+                Vec::new()
+            };
+            Ok(Some(Response::BufferSnapshot(data)))
         }
         Command::Shutdown => {
             shared_state.is_recording.store(false, Ordering::Relaxed);

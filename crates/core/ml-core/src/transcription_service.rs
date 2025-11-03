@@ -47,10 +47,10 @@ impl TranscriptionService {
                 if processed.is_empty() {
                     return Ok(String::new());
                 }
-                log::debug!("[ML] Transcription successful: {}", processed);
-                log::info!(
-                    "[ML] Transcription completed in {:.2}s, {} chars returned",
+                log::debug!(
+                    "[ML] Transcription successful in {:.2}s: {} ({} chars)",
                     elapsed.as_secs_f32(),
+                    processed,
                     processed.len()
                 );
                 Ok(processed)
