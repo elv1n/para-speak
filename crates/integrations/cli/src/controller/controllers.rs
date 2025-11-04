@@ -18,8 +18,13 @@ impl Controllers {
     pub fn new() -> anyhow::Result<Self> {
         let config = Config::global();
 
-        let ring_buffer = Arc::new(audio::RingBuffer::new(10, config.sample_rate));
-        let audio = Arc::new(Mutex::new(audio::AudioRecorder::with_realtime_ring(Some(ring_buffer.clone()))));
+        let ring_buffer = if config.realtime {
+            Some(Arc::new(audio::RingBuffer::new(10, config.sample_rate)))
+        } else {
+            None
+        };
+
+        let audio = Arc::new(Mutex::new(audio::AudioRecorder::with_realtime_ring(ring_buffer.clone())));
 
         let registry = create_default_registry(ring_buffer)
             .map_err(|e| anyhow::anyhow!("Failed to create component registry: {}", e))?

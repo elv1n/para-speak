@@ -13,7 +13,7 @@ pub struct ComponentRegistry {
 }
 
 pub fn create_default_registry(
-    realtime_ring: std::sync::Arc<audio::RingBuffer>,
+    realtime_ring: Option<std::sync::Arc<audio::RingBuffer>>,
 ) -> Result<RegistryBuilder> {
     use components::{
         AudioComponent, FocusDetectorComponent, TranscriptionObserver,
@@ -22,12 +22,15 @@ pub fn create_default_registry(
 
     info!("Creating default component registry");
 
-    let builder = RegistryBuilder::new()
+    let mut builder = RegistryBuilder::new()
         .register_component(AudioComponent::new())?
         .register_component(SpotifyComponent::new())?
         .register_component(TranscriptionHandler::new())?
-        .register_component(FocusDetectorComponent::new())?
-        .register_component(TranscriptionObserver::new(realtime_ring))?;
+        .register_component(FocusDetectorComponent::new())?;
+
+    if let Some(ring) = realtime_ring {
+        builder = builder.register_component(TranscriptionObserver::new(ring))?;
+    }
 
     info!(
         "Registry initialized with {} components",
